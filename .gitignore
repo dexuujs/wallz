@@ -1,4 +1,4 @@
-Build/*/*
-.vscode/
-layout.md
-qemu-*.*
+template.iso
+edk2-ovmf
+random.txt
+riscv-firmware
