@@ -1,40 +1,35 @@
-# Limine C Template
+# ILYWallz v0.01 [prototype]
 
-This repository will demonstrate how to set up a basic x86-64 kernel in C using Limine.
+abc 🔥🔥🔥
 
-It is recommended to cross reference the contents of this repository with [the Limine Bare Bones](https://osdev.wiki/wiki/Limine_Bare_Bones) OSDev wiki page.
+## how to use this?
 
-## How to use this?
+### dependencies
 
-### Dependencies
+any `make` command depends on GNU make (`gmake`) and is expected to be run using it, this usually means using `make` on most GNU/Linux distros or `gmake` on other non-GNU systems
 
-Any `make` command depends on GNU make (`gmake`) and is expected to be run using it. This usually means using `make` on most GNU/Linux distros, or `gmake` on other non-GNU systems.
+all `make all*` targets depend on a GNU-compatible C toolchain capable of generating x86-64 ELF objects, most of the time any `gcc/binutils` or `clang/llvm/lld` provided by any x86-64 UNIX like (including Linux) distribution will suffice.
 
-All `make all*` targets depend on a GNU-compatible C toolchain capable of generating x86-64 ELF objects. Usually `gcc/binutils` or `clang/llvm/lld` provided by any x86-64 UNIX like (including Linux) distribution will suffice.
+also building an ISO with `make all` requires `xorriso` and building a HDD/USB image with `make all-hdd` requires `sgdisk` (usually from `gdisk` or `gptfdisk` packages) and `mtools`
 
-Additionally, building an ISO with `make all` requires `xorriso`, and building a HDD/USB image with `make all-hdd` requires `sgdisk` (usually from `gdisk` or `gptfdisk` packages) and `mtools`.
+### toolchain selection
 
-### Toolchain selection
+`TOOLCHAIN` and `TOOLCHAIN_PREFIX` `make` variables can be used to set the toolchain, `TOOLCHAIN` can be set to `llvm` to use Clang/LLVM
 
-The `TOOLCHAIN` and `TOOLCHAIN_PREFIX` `make` variables can be used to set the toolchain. `TOOLCHAIN` can be set to `llvm` to use Clang/LLVM.
-
-For example:
-```
+for example:
+```bash
 make TOOLCHAIN=llvm
 ```
 or:
-```
+```bash
 make TOOLCHAIN_PREFIX=x86_64-elf-
 ```
 
-### Makefile targets
+### makefile targets
 
-Running `make all` will compile the kernel (from the `kernel/` directory) and then generate a bootable ISO image.
+* running `make all` will compile the kernel and then generate a bootable ISO image
+* running `make all-hdd` will compile the kernel and then generate a raw image suitable to be flashed onto a USB stick or hard drive/SSD
+* running `make run` will build the kernel and a bootable ISO and then run it using `qemu`
+* running `make run-hdd` will build the kernel and a raw HDD image and then run it using `qemu`
 
-Running `make all-hdd` will compile the kernel and then generate a raw image suitable to be flashed onto a USB stick or hard drive/SSD.
-
-Running `make run` will build the kernel and a bootable ISO (equivalent to make all) and then run it using `qemu` (if installed).
-
-Running `make run-hdd` will build the kernel and a raw HDD image (equivalent to make all-hdd) and then run it using `qemu` (if installed).
-
-The `run-uefi` and `run-hdd-uefi` targets are equivalent to their non `-uefi` counterparts except that they boot `qemu` using a UEFI-compatible firmware.
+the `run-uefi` and `run-hdd-uefi` targets are equivalent to their non `-uefi` counterparts except that they boot `qemu` using a UEFI-compatible firmware
