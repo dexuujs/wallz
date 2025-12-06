@@ -86,21 +86,6 @@ void draw_rectangle_rounded(uint32_t* FramebufferPointer, struct limine_framebuf
     }
 }
 
-volatile uint16_t* vga_buffer = (volatile uint16_t*)0xB8000;
-uint16_t cursor_pos = 0;
-
-void kputc(char c) {
-    if(c == '\n') {
-        cursor_pos += 80 - (cursor_pos % 80); // Move to next line
-    } else {
-        vga_buffer[cursor_pos++] = (0x0F << 8) | c; // White on black
-    }
-}
-
-void kputs(const char* str) {
-    while(*str) kputc(*str++);
-}
-
 void kmain(void) {
     /* [[ stage 1 - variables ]] */
     struct limine_framebuffer *Framebuffer;
@@ -126,7 +111,6 @@ void kmain(void) {
     draw_rectangle_rounded(FramebufferPointer,Framebuffer,20,40,380,360,8,0xFFFFFF);
     draw_rectangle(FramebufferPointer,Framebuffer,20,20,380,20,0x323232);
     serial_puts("Hello, world!");
-    kputs("Hello, world!");
     /* [[ end ]] */
 
     // We're done, just hang...
