@@ -34,7 +34,7 @@ volatile uint64_t limine_requests_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 void kmain(void) {
     /* [[ stage 1 - variables ]] */
     struct limine_framebuffer *Framebuffer;
-    volatile uint64_t *FramebufferPointer;
+    volatile uint32_t *FramebufferPointer;
     GUI_STATUS GUIStatus;
     /* [[ end ]] */
 

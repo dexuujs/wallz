@@ -5,16 +5,9 @@
 # Change as needed.
 override OUTPUT := kernel
 
-# Target architecture to build for. Default to x86_64.
-ARCH := x86_64
 
 # Install prefix; /usr/local is a good, standard default pick.
 PREFIX := /usr/local
-
-# Check if the architecture is supported.
-ifeq ($(filter $(ARCH),aarch64 loongarch64 x86_64),)
-    $(error Architecture $(ARCH) not supported)
-endif
 
 # User controllable toolchain and toolchain prefix.
 TOOLCHAIN := 
@@ -47,7 +40,7 @@ CFLAGS := -g -O2 -pipe -Iinclude -Iinclude/hardware
 # User controllable C preprocessor flags. We set none by default.
 CPPFLAGS :=
 
-ifeq ($(ARCH),x86_64)
+ifeq (x86_64,x86_64)
     # User controllable nasm flags.
     NASMFLAGS := -g
 endif
@@ -88,7 +81,7 @@ override CPPFLAGS := \
     -MMD \
     -MP
 
-ifeq ($(ARCH),x86_64)
+ifeq (x86_64,x86_64)
     # Internal nasm flags that should not be changed by the user.
     override NASMFLAGS := \
         $(patsubst -g,-g -F dwarf,$(NASMFLAGS)) \
@@ -96,7 +89,7 @@ ifeq ($(ARCH),x86_64)
 endif
 
 # Architecture specific internal flags.
-ifeq ($(ARCH),x86_64)
+ifeq (x86_64,x86_64)
     ifeq ($(CC_IS_CLANG),1)
         override CC += \
             -target x86_64-unknown-none-elf
@@ -117,7 +110,7 @@ ifeq ($(ARCH),x86_64)
         -f elf64 \
         $(NASMFLAGS)
 endif
-ifeq ($(ARCH),aarch64)
+ifeq (x86_64,aarch64)
     ifeq ($(CC_IS_CLANG),1)
         override CC += \
             -target aarch64-unknown-none-elf
@@ -129,7 +122,7 @@ ifeq ($(ARCH),aarch64)
     override LDFLAGS += \
         -m aarch64elf
 endif
-ifeq ($(ARCH),riscv64)
+ifeq (x86_64,riscv64)
     ifeq ($(CC_IS_CLANG),1)
         override CC += \
             -target riscv64-unknown-none-elf
@@ -142,7 +135,7 @@ ifeq ($(ARCH),riscv64)
         -m elf64lriscv \
         --no-relax
 endif
-ifeq ($(ARCH),loongarch64)
+ifeq (x86_64,loongarch64)
     ifeq ($(CC_IS_CLANG),1)
         override CC += \
             -target loongarch64-unknown-none-elf
@@ -162,51 +155,51 @@ override LDFLAGS += \
     -static \
     -z max-page-size=0x1000 \
     --gc-sections \
-    -T linker-scripts/$(ARCH).lds
+    -T linker-scripts/x86_64.lds
 
 # Use "find" to glob all *.c, *.S, and *.asm files in the tree
 # (except the src/arch/* directories, as those are gonna be added
 # in the next step).
 override SRCFILES := $(shell find -L src cc-runtime/src -type f -not -path 'src/arch/*' 2>/dev/null | LC_ALL=C sort)
 # Add architecture specific files, if they exist.
-override SRCFILES += $(shell find -L src/arch/$(ARCH) -type f 2>/dev/null | LC_ALL=C sort)
+override SRCFILES += $(shell find -L src/arch/x86_64 -type f 2>/dev/null | LC_ALL=C sort)
 # Obtain the object and header dependencies file names.
 override CFILES := $(filter %.c,$(SRCFILES))
 override ASFILES := $(filter %.S,$(SRCFILES))
-ifeq ($(ARCH),x86_64)
+ifeq (x86_64,x86_64)
 override NASMFILES := $(filter %.asm,$(SRCFILES))
 endif
-override OBJ := $(addprefix obj-$(ARCH)/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o))
-ifeq ($(ARCH),x86_64)
-override OBJ += $(addprefix obj-$(ARCH)/,$(NASMFILES:.asm=.asm.o))
+override OBJ := $(addprefix obj-x86_64/,$(CFILES:.c=.c.o) $(ASFILES:.S=.S.o))
+ifeq (x86_64,x86_64)
+override OBJ += $(addprefix obj-x86_64/,$(NASMFILES:.asm=.asm.o))
 endif
-override HEADER_DEPS := $(addprefix obj-$(ARCH)/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
+override HEADER_DEPS := $(addprefix obj-x86_64/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 
 # Default target. This must come first, before header dependencies.
 .PHONY: all
-all: bin-$(ARCH)/$(OUTPUT)
+all: bin-x86_64/$(OUTPUT)
 
 # Include header dependencies.
 -include $(HEADER_DEPS)
 
 # Link rules for the final executable.
-bin-$(ARCH)/$(OUTPUT): GNUmakefile linker-scripts/$(ARCH).lds $(OBJ)
+bin-x86_64/$(OUTPUT): GNUmakefile linker-scripts/x86_64.lds $(OBJ)
 	mkdir -p "$(dir $@)"
 	$(LD) $(LDFLAGS) $(OBJ) -o $@
 
 # Compilation rules for *.c files.
-obj-$(ARCH)/%.c.o: %.c GNUmakefile
+obj-x86_64/%.c.o: %.c GNUmakefile
 	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compilation rules for *.S files.
-obj-$(ARCH)/%.S.o: %.S GNUmakefile
+obj-x86_64/%.S.o: %.S GNUmakefile
 	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-ifeq ($(ARCH),x86_64)
+ifeq (x86_64,x86_64)
 # Compilation rules for *.asm (nasm) files.
-obj-$(ARCH)/%.asm.o: %.asm GNUmakefile
+obj-x86_64/%.asm.o: %.asm GNUmakefile
 	mkdir -p "$(dir $@)"
 	nasm $(NASMFLAGS) $< -o $@
 endif
@@ -214,7 +207,7 @@ endif
 # Remove object files and the final executable.
 .PHONY: clean
 clean:
-	rm -rf bin-$(ARCH) obj-$(ARCH)
+	rm -rf bin-x86_64 obj-x86_64
 
 # Remove everything built and generated including downloaded dependencies.
 .PHONY: distclean
@@ -225,10 +218,10 @@ distclean:
 .PHONY: install
 install: all
 	install -d "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
-	install -m 644 bin-$(ARCH)/$(OUTPUT) "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
+	install -m 644 bin-x86_64/$(OUTPUT) "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-x86_64"
 
 # Try to undo whatever the "install" target did.
 .PHONY: uninstall
 uninstall:
-	rm -f "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-$(ARCH)"
+	rm -f "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)/$(OUTPUT)-x86_64"
 	-rmdir "$(DESTDIR)$(PREFIX)/share/$(OUTPUT)"
