@@ -6,7 +6,7 @@ abc 🔥🔥🔥
 
 ### dependencies
 
-any `make` command depends on GNU make (`gmake`) and is expected to be run using it, this usually means using `make` on most GNU/Linux distros or `gmake` on other non-GNU systems
+any `make` command depends on GNU make and is expected to be run using it, this usually means using `make` on most GNU/Linux distros or `gmake` on other non-GNU systems
 
 all `make all*` targets depend on a GNU-compatible C toolchain capable of generating x86-64 ELF objects, most of the time any `gcc/binutils` or `clang/llvm/lld` provided by any x86-64 UNIX like (including Linux) distribution will suffice.
 

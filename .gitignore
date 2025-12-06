@@ -2,4 +2,4 @@ template.iso
 edk2-ovmf
 random.txt
 riscv-firmware
-iso_root/*
+iso_root
