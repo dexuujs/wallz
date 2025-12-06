@@ -17,7 +17,7 @@ ifeq ($(filter $(ARCH),aarch64 loongarch64 riscv64 x86_64),)
 endif
 
 # User controllable toolchain and toolchain prefix.
-TOOLCHAIN :=
+TOOLCHAIN := 
 TOOLCHAIN_PREFIX :=
 ifneq ($(TOOLCHAIN),)
     ifeq ($(TOOLCHAIN_PREFIX),)

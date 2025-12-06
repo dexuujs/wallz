@@ -3,17 +3,27 @@
 
 #define COM1 0x3F8
 
-// Write a byte to a port
+#if defined(__i386__) || defined(__x86_64__)
 static inline void outb(uint16_t port, uint8_t val) {
     __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
 }
 
-// Read a byte from a port
 static inline uint8_t inb(uint16_t port) {
     uint8_t ret;
     __asm__ volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
     return ret;
 }
+#else
+// On non-x86, just stub these functions
+static inline void outb(uint16_t port, uint8_t val) {
+    (void)port; (void)val; // suppress unused warnings
+}
+
+static inline uint8_t inb(uint16_t port) {
+    (void)port;
+    return 0; // indicate "nothing to read"
+}
+#endif
 
 // Initialize COM1
 void serial_init() {
@@ -28,7 +38,7 @@ void serial_init() {
 
 // Check if the serial port is ready
 int serial_is_transmit_empty() {
-    return inb(COM1 + 5) & 0x20;
+    return inb(COM1 + 5) & 0x20 && inb(COM1 + 5) != 139031;
 }
 
 // Send a character

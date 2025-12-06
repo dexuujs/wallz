@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <limine.h>
 #include <memalloc.h>
-#include <misc/serial.h>
-#include <typeutils/convert.h>
 
 __attribute__((used, section(".limine_requests")))
 volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(4);
@@ -21,13 +19,13 @@ volatile uint64_t limine_requests_start_marker[] = LIMINE_REQUESTS_START_MARKER;
 __attribute__((used, section(".limine_requests_end")))
 volatile uint64_t limine_requests_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 
-static void Hang(void) {
-    for (;;) {
-        asm ("hlt");
-    }
-}
+#if defined(__i386__) || defined(__x86_64__)
+#define Hang() __asm__ volatile ("hlt")
+#else
+#define Hang() do {} while(0) // no-op for other architectures
+#endif
 
-void draw_rectangle(uint32_t* FramebufferPointer, struct limine_framebuffer* Framebuffer,
+void draw_rectangle(volatile uint32_t* FramebufferPointer, struct limine_framebuffer* Framebuffer,
                     int sx, int sy, int width, int height, uint32_t color) {
     for (int j = 0; j < height; j++) {
         for (int i = 0; i < width; i++) {
@@ -41,7 +39,7 @@ void draw_rectangle(uint32_t* FramebufferPointer, struct limine_framebuffer* Fra
     }
 }
 
-void draw_rectangle_rounded(uint32_t* FramebufferPointer, struct limine_framebuffer* Framebuffer,
+void draw_rectangle_rounded(volatile uint32_t* FramebufferPointer, struct limine_framebuffer* Framebuffer,
                             int sx, int sy, int width, int height, int8_t roundness, uint32_t color) {
     int r = roundness < 0 ? 0 : roundness;
 
@@ -103,14 +101,17 @@ void kmain(void) {
     Framebuffer = FramebufferRequest.response->framebuffers[0];
     FramebufferPointer = Framebuffer->address;
 
-    serial_init();
     /* [[ end ]] */
 
     /* [[ stage 3 - draw.. etc. etc. ]] */
+    /* x,y,sx,sy,rnd/otl?,clr */
+    draw_rectangle(FramebufferPointer, Framebuffer, 0, 0, Framebuffer->width, Framebuffer->height, 0x202020);
     draw_rectangle_rounded(FramebufferPointer, Framebuffer, 10, 10, 400, 400, 8, 0x323232);
     draw_rectangle_rounded(FramebufferPointer,Framebuffer,20,40,380,360,8,0xFFFFFF);
     draw_rectangle(FramebufferPointer,Framebuffer,20,20,380,20,0x323232);
-    serial_puts("Hello, world!");
+    draw_rectangle_rounded(FramebufferPointer,Framebuffer,375,12,25,25,10,0xFF0000);
+    draw_rectangle_rounded(FramebufferPointer,Framebuffer,345,12,25,25,10,0xFF8000);
+    draw_rectangle_rounded(FramebufferPointer,Framebuffer,315,12,25,25,10,0x00FF00);
     /* [[ end ]] */
 
     // We're done, just hang...
