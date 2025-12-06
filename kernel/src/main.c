@@ -3,6 +3,12 @@
 #include <stdbool.h>
 #include <limine.h>
 #include <memalloc.h>
+#include <misc/serial.h>
+#include <gui/drawmgr.h>
+#include <gui/guidef.h>
+#include <gui/guitypes.h>
+#include <gui/drawhelper.h>
+#include <cpu.h>
 
 __attribute__((used, section(".limine_requests")))
 volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(4);
@@ -20,74 +26,16 @@ __attribute__((used, section(".limine_requests_end")))
 volatile uint64_t limine_requests_end_marker[] = LIMINE_REQUESTS_END_MARKER;
 
 #if defined(__i386__) || defined(__x86_64__)
-#define Hang() __asm__ volatile ("hlt")
+#define Hang() {__asm__ volatile ("hlt");}
 #else
 #define Hang() do {} while(0) // no-op for other architectures
 #endif
 
-void draw_rectangle(volatile uint32_t* FramebufferPointer, struct limine_framebuffer* Framebuffer,
-                    int sx, int sy, int width, int height, uint32_t color) {
-    for (int j = 0; j < height; j++) {
-        for (int i = 0; i < width; i++) {
-            int px = sx + i;
-            int py = sy + j;
-            if (px >= 0 && px < (int)Framebuffer->width &&
-                py >= 0 && py < (int)Framebuffer->height) {
-                FramebufferPointer[py * (Framebuffer->pitch / 4) + px] = color;
-            }
-        }
-    }
-}
-
-void draw_rectangle_rounded(volatile uint32_t* FramebufferPointer, struct limine_framebuffer* Framebuffer,
-                            int sx, int sy, int width, int height, int8_t roundness, uint32_t color) {
-    int r = roundness < 0 ? 0 : roundness;
-
-    for (int j = 0; j < height; j++) {
-        for (int i = 0; i < width; i++) {
-            int px = sx + i;
-            int py = sy + j;
-
-            if (px < 0 || px >= (int)Framebuffer->width || py < 0 || py >= (int)Framebuffer->height)
-                continue;
-
-            // Check if the pixel is in a corner region and outside the rounding circle.
-            // If it's outside the circle, it's the clipped area, so we skip drawing the color.
-            
-            // Top-left corner: (i - r) * (i - r) + (j - r) * (j - r) > r * r
-            // Center of circle is at (r, r) relative to the rectangle's top-left (0, 0).
-            if (i < r && j < r) {
-                if ((i - r) * (i - r) + (j - r) * (j - r) > r * r) continue;
-            }
-
-            // Top-right corner: (i - (width - r)) * (i - (width - r)) + (j - r) * (j - r) > r * r
-            // Center of circle is at (width - r, r).
-            else if (i >= width - r && j < r) {
-                if ((i - (width - r)) * (i - (width - r)) + (j - r) * (j - r) > r * r) continue;
-            }
-
-            // Bottom-left corner: (i - r) * (i - r) + (j - (height - r)) * (j - (height - r)) > r * r
-            // Center of circle is at (r, height - r).
-            else if (i < r && j >= height - r) {
-                if ((i - r) * (i - r) + (j - (height - r)) * (j - (height - r)) > r * r) continue;
-            }
-
-            // Bottom-right corner: (i - (width - r)) * (i - (width - r)) + (j - (height - r)) * (j - (height - r)) > r * r
-            // Center of circle is at (width - r, height - r).
-            else if (i >= width - r && j >= height - r) {
-                if ((i - (width - r)) * (i - (width - r)) + (j - (height - r)) * (j - (height - r)) > r * r) continue;
-            }
-            
-            // If none of the 'continue' conditions were met, draw the color.
-            FramebufferPointer[py * (Framebuffer->pitch / 4) + px] = color;
-        }
-    }
-}
-
 void kmain(void) {
     /* [[ stage 1 - variables ]] */
     struct limine_framebuffer *Framebuffer;
-    volatile uint32_t *FramebufferPointer;
+    volatile uint64_t *FramebufferPointer;
+    GUI_STATUS GUIStatus;
     /* [[ end ]] */
 
     /* [[ stage 2 - get framebuffer ]] */
@@ -98,13 +46,13 @@ void kmain(void) {
      || FramebufferRequest.response->framebuffer_count < 1) {
         Hang();
     }
-    Framebuffer = FramebufferRequest.response->framebuffers[0];
+    Framebuffer = FramebufferRequest.response->framebuffers[0];    
     FramebufferPointer = Framebuffer->address;
-
+    serial_init();
     /* [[ end ]] */
 
     /* [[ stage 3 - draw.. etc. etc. ]] */
-    /* x,y,sx,sy,rnd/otl?,clr */
+    /* x,y,sx,sy,rnd/tck?,clr */
     draw_rectangle(FramebufferPointer, Framebuffer, 0, 0, Framebuffer->width, Framebuffer->height, 0x202020);
     draw_rectangle_rounded(FramebufferPointer, Framebuffer, 10, 10, 400, 400, 8, 0x323232);
     draw_rectangle_rounded(FramebufferPointer,Framebuffer,20,40,380,360,8,0xFFFFFF);
@@ -112,6 +60,27 @@ void kmain(void) {
     draw_rectangle_rounded(FramebufferPointer,Framebuffer,375,12,25,25,10,0xFF0000);
     draw_rectangle_rounded(FramebufferPointer,Framebuffer,345,12,25,25,10,0xFF8000);
     draw_rectangle_rounded(FramebufferPointer,Framebuffer,315,12,25,25,10,0x00FF00);
+    // dirty hack while heap is not implemented
+    Widget myWidget_instance;
+    Widget* myWidget = &myWidget_instance;
+    // dirty hack end
+    Rect myRectangle;
+    GuiObjectParameters myWidget_Parameters;
+
+    myWidget_Parameters.Visible = true;
+    myWidget_Parameters.Position = (t2D){ .x = 10, .y = 20 };
+    myWidget_Parameters.Size = (t2D){ .x = 50, .y = 50 };
+
+    myWidget->type = WIDGET_RECT;
+
+    myRectangle.Parameters = myWidget_Parameters;
+    myRectangle.Color = (RGBA){ .HexCode = 0xFF00FF, .IsAlpha = false };
+    myRectangle.Roundness = 8;
+
+    myWidget->data = &myRectangle;
+    GUIStatus = Draw(myWidget, FramebufferPointer, Framebuffer);
+    if (GUIStatus != GUI_DRAW_SUCCESS)
+        serial_puts("Erreur!\n");
     /* [[ end ]] */
 
     // We're done, just hang...

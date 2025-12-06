@@ -21,20 +21,14 @@ typedef struct {
 } Callback;
 
 typedef struct {
-    uint8_t Red;
-    uint8_t Green;
-    uint8_t Blue;
-    uint8_t Alpha;
+    uint32_t HexCode;
+    bool IsAlpha;
 } RGBA;
 
 typedef struct {
     t2D Position;
     t2D Size;
     bool Visible;
-    int32_t ZOrder;
-    Callback HoverEvent;
-    Callback ClickEvent;
-    Callback OnKeyPressWhileHoveringEvent;
     Callback ObjectAddEvent;
     Callback Draw;
 } GuiObjectParameters;
@@ -95,3 +89,15 @@ typedef struct {
     Panel WindowTitle;
     bool Draggable;
 } Window;
+
+typedef enum {
+    WIDGET_RECT,
+    WIDGET_BUTTON,
+    WIDGET_LABEL,
+    WIDGET_PANEL
+} WidgetType;
+
+typedef struct {
+    WidgetType type;
+    void* data;
+} Widget;

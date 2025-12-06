@@ -1,0 +1,15 @@
+#include <limine.h>
+
+#pragma once
+
+typedef enum {
+    GUI_OUT_OF_BOUNDS = 2,
+    GUI_DRAW_SUCCESS = 0,
+    GUI_UNKNOWN_ERROR = 1,
+    GUI_UNSUPPORTED = 3,
+    GUI_WIDGET_IS_NULL = 4,
+    GUI_BAD_WIDGET_TYPE = 5,
+    GUI_INVALID_FRAMEBUFFER = 6,
+    GUI_INVALID_FBPOINTER = 7,
+    GUI_FRAMEBUFFER_ERROR = 9
+} GUI_STATUS;

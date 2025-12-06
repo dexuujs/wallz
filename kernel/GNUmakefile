@@ -12,7 +12,7 @@ ARCH := x86_64
 PREFIX := /usr/local
 
 # Check if the architecture is supported.
-ifeq ($(filter $(ARCH),aarch64 loongarch64 riscv64 x86_64),)
+ifeq ($(filter $(ARCH),aarch64 loongarch64 x86_64),)
     $(error Architecture $(ARCH) not supported)
 endif
 
@@ -42,7 +42,7 @@ ifeq ($(TOOLCHAIN),llvm)
 endif
 
 # User controllable C flags.
-CFLAGS := -g -O2 -pipe -Iinclude
+CFLAGS := -g -O2 -pipe -Iinclude -Iinclude/hardware
 
 # User controllable C preprocessor flags. We set none by default.
 CPPFLAGS :=

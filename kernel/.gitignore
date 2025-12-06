@@ -6,3 +6,5 @@
 /limine-protocol
 /bin-*
 /obj-*
+/obj-x86_64
+/bin-x86_64
